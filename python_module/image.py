@@ -11,6 +11,7 @@ class Image:
     lvl_pyramid:        int
     debug_cfg:          dict = field(default_factory=dict)
     image_orig:         np.ndarray = field(init=False) # color image
+    image_gray:         np.ndarray = field(init=False) # gray image
     image_pyramid:      list = field(init=False)
     pyramid_shape:      list = field(init=False)
     image_grad:         list = field(init=False)
@@ -18,15 +19,16 @@ class Image:
     grad_hist:          bool = False
 
     def __post_init__(self):
-        self.image_orig = cv2.imread(str(self.file_path), cv2.IMREAD_GRAYSCALE)
+        self.image_orig = cv2.imread(str(self.file_path))
+        self.image_gray = cv2.cvtColor(self.image_orig, cv2.COLOR_BGR2GRAY)
         
         self.image_pyramid  = self._create_pyramid()
         self.pyramid_shape  = [image.shape for image in self.image_pyramid]
         self.image_grad = self._create_gradient()
         
     def _create_pyramid(self):
-        pyramid = [self.image_orig]
-        h, w = self.image_orig.shape
+        pyramid = [self.image_gray]
+        h, w = self.image_gray.shape
         for i in range(self.lvl_pyramid):
             pyramid.append(cv2.pyrDown(pyramid[-1]))
         return pyramid
@@ -36,18 +38,18 @@ class Image:
         create gradient image pyramid from original image pyramid
         """
         # Check if the image is 2D (grayscale)
-        if len(self.image_orig.shape) > 2:
+        if len(self.image_gray.shape) > 2:
             raise ValueError("The input self.orig_file should be grayscale (2D array).")
 
         # Create arrays to store the gradients
-        grad_i_x = np.zeros_like(self.image_orig, dtype=np.float32)
-        grad_i_y = np.zeros_like(self.image_orig, dtype=np.float32)
+        grad_i_x = np.zeros_like(self.image_gray, dtype=np.float32)
+        grad_i_y = np.zeros_like(self.image_gray, dtype=np.float32)
 
         # Calculate the gradients of original image
-        for v in range(1, self.image_orig.shape[0]-1):
-            for u in range(1, self.image_orig.shape[1]-1):
-                grad_i_x[v, u] = self.image_orig[v, u+1].astype(np.float32) - self.image_orig[v, u-1].astype(np.float32)
-                grad_i_y[v, u] = self.image_orig[v+1, u].astype(np.float32) - self.image_orig[v-1, u].astype(np.float32)
+        for v in range(1, self.image_gray.shape[0]-1):
+            for u in range(1, self.image_gray.shape[1]-1):
+                grad_i_x[v, u] = self.image_gray[v, u+1].astype(np.float32) - self.image_gray[v, u-1].astype(np.float32)
+                grad_i_y[v, u] = self.image_gray[v+1, u].astype(np.float32) - self.image_gray[v-1, u].astype(np.float32)
 
         grad_img = np.sqrt(grad_i_x**2 + grad_i_y**2)
 
@@ -89,6 +91,20 @@ class Image:
                 grad_img_list.append(new_grad_img)
         
         return grad_img_list
+
+    def convert(self, color:str = 'rgb'):
+        if color == 'rgb':
+            return cv2.cvtColor(self.image_orig, cv2.COLOR_BGR2RGB)
+        elif color == 'gray':
+            return self.image_gray
+        elif color == 'bgr':
+            return self.image_orig
+
+    def is_valid(self, u, v) -> bool:
+        if u < 0 or u >= self.image_gray.shape[1] \
+            or v < 0 or v >= self.image_gray.shape[0]:
+            return False
+        return True
 
     def _debug_pyramid(self):
         # show all information of image pyramid

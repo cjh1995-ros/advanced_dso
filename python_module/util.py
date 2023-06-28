@@ -18,6 +18,31 @@ def bilinear_interpolation(x: float, y: float, image: np.ndarray):
     val = val @ np.array([[q11, q12], [q21, q22]], dtype=np.float32) @ np.array([[y2 - y], [y - y1]], dtype=np.float32)
     return val[0][0]
 
+def get_interpolated_value(x: int, y: int, image: np.ndarray):
+    """
+    return color + dx color + dy color
+    """
+    # check if it's valid
+    if x < 0 or x >= image.shape[1] - 1 or y < 0 or y >= image.shape[0] - 1:
+        return None
+
+    tl = image[y, x]
+    tr = image[y, x + 1]
+    bl = image[y + 1, x]
+    br = image[y + 1, x + 1]
+
+    dx = x - int(x)
+    dy = y - int(y)
+
+    top_color = (1 - dx) * tl + dx * tr
+    bottom_color = (1 - dx) * bl + dx * br
+    left_color = (1 - dy) * tl + dy * bl
+    right_color = (1 - dy) * tr + dy * br
+
+    return np.array([dx * right_color + (1 - dx) * left_color, 
+                     right_color - left_color,
+                     bottom_color - top_color], dtype=np.float32)
+
 def debug_bilinear_interpolation():
     # gen random values for testing
     x = np.random.uniform(0, 10)

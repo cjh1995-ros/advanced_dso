@@ -2,10 +2,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from image import Image
 from copy import deepcopy
-from basic_data_structure import Pixel, Point
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from math import ceil
+from segmentation import segment
 
 @dataclass
 class PixelSelector:
@@ -15,7 +16,8 @@ class PixelSelector:
     smoothed_threshold:         np.ndarray = field(init=False)  # _create_histogram 에서 생성됨
 
     # setting values
-    setting_grid_size:          tuple = (32, 32)
+    setting_grid_shape:          tuple = (32, 32)
+    setting_grid_size:         int = 32
     setting_potential_value:    int = 3 # <-- 진행하면서 바뀔 수 있음
     setting_grad_threshold:     int = 50
     setting_hist_ratio:         float = 0.5
@@ -85,7 +87,7 @@ class PixelSelector:
 
         h, w = image.pyramid_shape[0]
 
-        h32, w32 = h // self.setting_grid_size[0], w // self.setting_grid_size[1]
+        w32, h32 = ceil(w / self.setting_grid_size), ceil(h / self.setting_grid_size)
 
         img_grad0 = image.image_grad[0]# 0번째 level 의 sqrt(grad_x^2 + grad_y^2), grad_x, grad_y
         img_grad1 = image.image_grad[1]# 1번째 level 의 sqrt(grad_x^2 + grad_y^2), grad_x, grad_y
@@ -134,7 +136,7 @@ class PixelSelector:
                                         assert xf < w and yf < h
 
                                         # 해당 픽셀이 갖는 threhold 값 찾기
-                                        pix_threshold0 = self.smoothed_threshold[yf // h32, xf // w32]
+                                        pix_threshold0 = self.smoothed_threshold[yf // self.setting_grid_size, xf // self.setting_grid_size]
                                         pix_threshold1 = pix_threshold0 * d1
                                         pix_threshold2 = pix_threshold1 * d2
 
@@ -192,59 +194,58 @@ class PixelSelector:
 
     def _create_histogram(self, image: Image) -> None:
         """
-            이미지를 32x32(self.setting_grid_size)로 나누고, 각각의 그리드에서
-            픽셀의 gradient를 구해서 histogram을 만든다. 이후 만들어진 histogram을
-            smoothing 하면서 pixel threshold를 만든다.
+            이미지를 32x32 크기의 그리드로 나누고, 각각의 그리드에서
+            픽셀의 gradient를 구해서 histogram을 만든다. --> 640x480 -> 20x15 개의 그리드 생성
+            이후 만들어진 histogram을 smoothing 하면서 pixel threshold를 만든다.
         """
         image.grad_hist = True
         h, w = image.pyramid_shape[0] 
 
-        pixel_thresholds = np.full(self.setting_grid_size, 0, dtype=np.float32)
-        grid_y, grid_x = self.setting_grid_size
-        
-        # original gradient 이미지에서 해당 픽셀의 sqrt(idx^2 + idy^2) 를 갖고 옴.
+        # grid의 개수 계산 및 threshold 넣을 배열 생성 h32 x w32
+        w32, h32 = ceil(w / self.setting_grid_size), ceil(h / self.setting_grid_size)
+        pixel_thresholds = np.full((h32, w32), 0, dtype=np.float32)
+        self.smoothed_threshold = np.full((h32, w32), 0, dtype=np.float32)
+
+        # 이미지 피라미드로 부터 오리지날 gradient를 불러오기
         original_grad_img = image.image_grad[0][..., 0]
         
-        # 이미지를 32x32 로 나눈 후 각각의 그리드에서 픽셀의 threshold를 구한다.
-        # 이 경우 히스토그램의 idx 값이 threshold 가 된다.
-        inc_x, inc_y = int(w / grid_x), int(h / grid_y)
-
-        for grid_j in range(0, h, inc_y):
-            for grid_i in range(0, w, inc_x):
-                # 왜 마지막 까지 가는거냐....? 쨋든 index 에서 제외해줘야 하니 해당 idx는 continue 로 탈출한다.
+        # 각 그리드에서 histogram을 만들고 threshold 계산 및 채우기
+        for j in range(0,h32):
+            for i in range(0, w32):
                 histogram = np.zeros(self.setting_grad_threshold + 1, dtype=np.int32)
-                for j in range(inc_y):
-                    for i in range(inc_x):                         
-                         grad = original_grad_img[int(grid_j + j), int(grid_i + i)]
-                         if grad > self.setting_grad_threshold: grad = self.setting_grad_threshold
-                         histogram[int(grad)] += 1
-                
-                # pixel threshold is made from histogram
+                for grid_j in range(self.setting_grid_size):
+                    for grid_i in range(self.setting_grid_size):
+                        # 이미지가 32로 딱 나뉘지 않는 경우, 마지막 행, 열의 그리드의 모양이 다를 수 있다. 이를 고려하면, 나머지 부분은 넘긴다.
+                        if j * self.setting_grid_size + grid_j >= h or i * self.setting_grid_size + grid_i >= w: continue
+                        grad = original_grad_img[j * self.setting_grid_size + grid_j, i * self.setting_grid_size + grid_i]
+                        if grad > self.setting_grad_threshold: grad = self.setting_grad_threshold
+                        histogram[int(grad)] += 1
+
+                # 히스토그램으로부터 threshold를 계산한다.
                 pixel_threshold = self._create_histogram_threshold(histogram) + self.setting_min_grad_hist_add
                 
-                pixel_thresholds[grid_j // inc_y, grid_i // inc_x] = pixel_threshold
+                pixel_thresholds[j, i] = pixel_threshold
 
-        smoothed_thresholds = np.full(self.setting_grid_size, 0, dtype=np.float32)
-
-        for j in range(grid_y):
-            for i in range(grid_x):
+        # 각 그리드의 threshold를 smoothing 하면서 최종 threshold를 생성
+        for j in range(h32):
+            for i in range(w32):
                 sum, num = 0, 0
                 if i > 0:
                     if j > 0:
                         num += 1
                         sum += pixel_thresholds[j - 1, i - 1]
-                    if j < grid_y - 1:
+                    if j < h32 - 1:
                         num += 1
                         sum += pixel_thresholds[j + 1, i - 1]
 
                     num += 1
                     sum += pixel_thresholds[j, i - 1]
                 
-                if i < grid_x - 1:
+                if i < w32 - 1:
                     if j > 0:
                         num += 1
                         sum += pixel_thresholds[j - 1, i + 1]
-                    if j < grid_y - 1:
+                    if j < h32 - 1:
                         num += 1
                         sum += pixel_thresholds[j + 1, i + 1]
 
@@ -255,16 +256,16 @@ class PixelSelector:
                     num += 1
                     sum += pixel_thresholds[j - 1, i]
 
-                if j < grid_y - 1:
+                if j < h32 - 1:
                     num += 1
                     sum += pixel_thresholds[j + 1, i]
                 
                 num += 1
                 sum += pixel_thresholds[j, i]
 
-                smoothed_thresholds[j, i] = sum / num
+                # fill the smoothed_threshold
+                self.smoothed_threshold[j, i] = sum / num
 
-        self.smoothed_threshold = smoothed_thresholds
 
     def _create_histogram_threshold(self, histogram: list) -> float:
         """
@@ -327,7 +328,7 @@ def test_make_maps(img_path: Path):
 
     selector = PixelSelector(h=h, w=w)
 
-    densities = [0.03, 0.05, 0.15, 0.5, 1.0]
+    # densities = [0.03, 0.05, 0.15, 0.5, 1.0]
     recursion = 1
 
     # n_point, masked_map = selector.make_maps(image=img, density=densities[0] * w * h, recursion_left=recursion)
@@ -335,9 +336,13 @@ def test_make_maps(img_path: Path):
     
     print(n_point) # 40544 -> 1515
 
-    new_img = deepcopy(img.image_orig)
+    new_img = deepcopy(img.image_gray)
 
-    new_img = cv2.cvtColor(new_img, cv2.COLOR_GRAY2RGB) # convert to RGB
+    # new_img = cv2.cvtColor(new_img, cv2.COLOR_GRAY2RGB) # convert to RGB
+    segment_mask = segment(img_path)
+
+    point_in_mask = masked_map & segment_mask
+    point_not_in_mask = masked_map & ~segment_mask
 
     # show masked threshold image
     plt.imshow(selector.smoothed_threshold, cmap='jet')
@@ -349,15 +354,13 @@ def test_make_maps(img_path: Path):
     plt.imshow(new_img)
     for y in range(masked_map.shape[0]):
         for x in range(masked_map.shape[1]):
-            if masked_map[y, x] == 1:
+            if point_not_in_mask[y, x] == 1:
                 plt.scatter(x, y, c='r', s=3)
-                # new_img[y, x] = [255, 0, 0]
-            elif masked_map[y, x] == 2:
+
+    for y in range(point_in_mask.shape[0]):
+        for x in range(point_in_mask.shape[1]):
+            if point_in_mask[y, x] == 1:
                 plt.scatter(x, y, c='g', s=3)
-                # new_img[y, x] = [0, 255, 0]
-            elif masked_map[y, x] == 4:
-                plt.scatter(x, y, c='b', s=3)
-                # new_img[y, x] = [0, 0, 255]
 
     plt.title('selected pixels')
     plt.show()
@@ -366,26 +369,9 @@ def test_make_maps(img_path: Path):
 
 
 if __name__ == '__main__':
-    import zipfile
+    img_path = Path.cwd() / 'data' / 'data_odometry_color' / 'dataset' / 'sequences' / '00' / 'image_2' / '000000.png'
 
-    zip_name = 'my_archive.zip'
-
-    with zipfile.ZipFile(zip_name, 'r') as zipf:
-        file_list = zipf.namelist()
-
-        for file_name in file_list:
-            if file_name.endswith('.jpg'):
-                # 선택된 파일 읽기
-                with zipf.open(file_name, 'r') as file:
-                    file_contents = file.read()
-                    # 읽은 파일 내용을 활용하여 원하는 작업 수행
-                    # 예시로 파일 이름과 내용 출력
-                    print(f'File: {file_name}')
-                    print('Contents:', file_contents)
-
-    print('압축 파일 내의 필요한 파일들을 읽었습니다.')
-
-    img_path = Path.cwd() / 'data' / 'sequence_09' / 'images' / '00000.jpg'
+    # img_path = Path.cwd() / 'data' / 'sequence_09' / 'images' / '00000.jpg'
     # test_create_histogram(img_path)
     # test_select(img_path)
     test_make_maps(img_path)
