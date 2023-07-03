@@ -1,2 +1,5 @@
+build/
+
 data/
+
 python_module/__pycache__/
