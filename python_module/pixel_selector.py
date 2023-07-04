@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from math import ceil
-from segmentation import segment
+
 
 @dataclass
 class PixelSelector:
@@ -87,8 +87,6 @@ class PixelSelector:
 
         h, w = image.pyramid_shape[0]
 
-        w32, h32 = ceil(w / self.setting_grid_size), ceil(h / self.setting_grid_size)
-
         img_grad0 = image.image_grad[0]# 0번째 level 의 sqrt(grad_x^2 + grad_y^2), grad_x, grad_y
         img_grad1 = image.image_grad[1]# 1번째 level 의 sqrt(grad_x^2 + grad_y^2), grad_x, grad_y
         img_grad2 = image.image_grad[2]# 2번째 level 의 sqrt(grad_x^2 + grad_y^2), grad_x, grad_y
@@ -167,6 +165,7 @@ class PixelSelector:
                                         if best_idx4 == (-2, -2):
                                             continue
 
+                                        # 이 부분도 bilinear interpolation으로 구하면 좋을 듯.
                                         ag2 = img_grad2[int(yf // 4 + 0.125), int(xf // 4 + 0.125)][0]
                                         if ag2 > pix_threshold2 * th_factor:
                                             ag2d = img_grad2[int(yf // 4 + 0.125), int(xf // 4 + 0.125)][1:]
@@ -338,6 +337,47 @@ def test_make_maps(img_path: Path):
 
     new_img = deepcopy(img.image_gray)
 
+    # show masked threshold image
+    plt.imshow(selector.smoothed_threshold, cmap='jet')
+    plt.title('masked threshold image')
+    plt.colorbar()
+    plt.show()
+
+    # show selected pixels
+    plt.imshow(new_img)
+    for y in range(masked_map.shape[0]):
+        for x in range(masked_map.shape[1]):
+            if masked_map[y, x] == 1:
+                plt.scatter(x, y, c='r', s=3)
+
+            if masked_map[y, x] == 2:
+                plt.scatter(x, y, c='g', s=3)
+
+            if masked_map[y, x] == 4:
+                plt.scatter(x, y, c='b', s=3)
+
+    plt.title('selected pixels')
+    plt.show()
+
+
+def test_make_maps_with_segment(img_path: Path):
+    from segmentation import segment
+    img = Image(img_path, 4)
+
+    h, w = img.pyramid_shape[0]
+
+    selector = PixelSelector(h=h, w=w)
+
+    # densities = [0.03, 0.05, 0.15, 0.5, 1.0]
+    recursion = 1
+
+    # n_point, masked_map = selector.make_maps(image=img, density=densities[0] * w * h, recursion_left=recursion)
+    n_point, masked_map = selector.make_maps(image=img, density=1500, recursion_left=recursion)
+    
+    print(n_point) # 40544 -> 1515
+
+    new_img = deepcopy(img.image_gray)
+
     # new_img = cv2.cvtColor(new_img, cv2.COLOR_GRAY2RGB) # convert to RGB
     segment_mask = segment(img_path)
 
@@ -367,9 +407,10 @@ def test_make_maps(img_path: Path):
 
 
 
-
 if __name__ == '__main__':
-    img_path = Path.cwd() / 'data' / 'data_odometry_color' / 'dataset' / 'sequences' / '00' / 'image_2' / '000000.png'
+    # img_path = Path.cwd() / 'data' / 'data_odometry_color' / 'dataset' / 'sequences' / '00' / 'image_2' / '000000.png'
+
+    img_path = Path.cwd() / 'data' / 'myroom.jpeg'
 
     # img_path = Path.cwd() / 'data' / 'sequence_09' / 'images' / '00000.jpg'
     # test_create_histogram(img_path)
