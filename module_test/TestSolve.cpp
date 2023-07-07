@@ -69,9 +69,9 @@ void SmallOptimizer::calcJacobian()
     Eigen::VectorXf jac_y(8);
 
     Eigen::MatrixXf hess_y_y(8, 8);
-    Eigen::SparseMatrix<float> hess_rho_y(residual_.size(), 8);
-    Eigen::SparseMatrix<float> hess_y_rho(8, residual_.size());
-    Eigen::SparseMatrix<float> hess_rho_rho(residual_.size(), residual_.size());
+    Eigen::MatrixXf hess_rho_y(residual_.size(), 8);
+    Eigen::MatrixXf hess_y_rho(8, residual_.size());
+    Eigen::MatrixXf hess_rho_rho(residual_.size(), residual_.size());
 
     Eigen::VectorXf b_y(8);
     Eigen::VectorXf b_rho(residual_.size());
