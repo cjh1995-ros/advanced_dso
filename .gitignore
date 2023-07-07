@@ -3,3 +3,7 @@ build/
 data/
 
 python_module/__pycache__/
+
+.vscode/
+
+.gitignore

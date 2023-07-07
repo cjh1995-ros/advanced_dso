@@ -3,33 +3,45 @@
 
 namespace adso 
 {
+ImageReader::ImageReader(std::string image_folder)
+{
+    getDir(image_folder);
+
+    // check do we resize the image
+    cv::Mat img = cv::imread(files_[0]);
+    img_new_size_ = img.size();
+    is_resize_ = false;
+
+    std::cout << "ImageReader: " << files_.size() << " images found." << std::endl;
+}   
 
 
 ImageReader::ImageReader(std::string image_folder,
                          cv::Size image_size)
 {
-    this->m_img_new_size = image_size;
-    this->getDir(image_folder);
+    img_new_size_ = image_size;
+    getDir(image_folder);
 
     // check do we resize the image
-    cv::Mat img = cv::imread(this->m_files[0]);
-    if (img.size() != image_size)
-        isResize = true;
+    cv::Mat img = cv::imread(files_[0]);
+    if (img.size() != img_new_size_)
+        is_resize_ = true;
+        
 
-    std::cout << "ImageReader: " << m_files.size() << " images found." << std::endl;
+    std::cout << "ImageReader: " << files_.size() << " images found." << std::endl;
 }   
 
 
 cv::Mat ImageReader::readImage(int index)
 {
-    cv::Mat img = cv::imread(this->m_files[index]);
+    cv::Mat img = cv::imread(files_[index]);
 
     if (img.empty())
     {
-        std::cout << "ImageReader: Error reading image " << this->m_files[index] << std::endl;
+        std::cout << "ImageReader: Error reading image " << files_[index] << std::endl;
         exit(1);
     }
-    if (isResize)
+    if (is_resize_)
         cv::resize(img, img, m_img_new_size);
     
     return img;
@@ -51,12 +63,12 @@ int ImageReader::getDir(const std::string& dir)
     // add file names in the directory to the vector
     for (const fs::directory_entry& entry : fs::directory_iterator(path))
     {
-        this->m_files.push_back(entry.path());
+        files_.push_back(entry.path());
     }
 
-    std::sort(this->m_files.begin(), this->m_files.end());
+    std::sort(files_.begin(), files_.end());
     
-    return (int)this->m_files.size();
+    return (int)files_.size();
 }
 
 } // namespace adso

@@ -16,7 +16,8 @@ public:
     /// TODO: add reading calibration file from string
     /// @brief Construct a new ImageReader object
     /// @param image_folder 
-    /// @param image_size 
+    /// @param image_size
+    ImageReader(std::string image_folder);
     ImageReader(std::string image_folder, cv::Size image_size);
 
     /// @brief Read image from the folder
@@ -34,9 +35,9 @@ public:
     int getDir(const std::string& dir);
 
 private:
-    bool isResize = false;
-    cv::Size m_img_new_size;
-    std::vector<std::string> m_files;
+    bool is_resize_ = false;
+    cv::Size img_new_size_;
+    std::vector<std::string> files_;
 };
 
 

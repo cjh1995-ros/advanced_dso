@@ -2,6 +2,7 @@
     "files.associations": {
         "*.txt": "cmake",
         "iosfwd": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "chrono": "cpp"
     }
 }
