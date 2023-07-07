@@ -338,7 +338,7 @@ def test_make_maps(img_path: Path):
 
     new_img = deepcopy(img.image_gray)
 
-    # new_img = cv2.cvtColor(new_img, cv2.COLOR_GRAY2RGB) # convert to RGB
+    new_img = cv2.cvtColor(new_img, cv2.COLOR_GRAY2RGB) # convert to RGB
     segment_mask = segment(img_path)
 
     point_in_mask = masked_map & segment_mask
@@ -370,7 +370,7 @@ def test_make_maps(img_path: Path):
 
 if __name__ == '__main__':
     img_path = Path.cwd() / 'data' / 'data_odometry_color' / 'dataset' / 'sequences' / '00' / 'image_2' / '000000.png'
-
+    img_path = Path.cwd() / 'data' / 'calib_narrow_checkerboard1' / 'images' / '00000.jpg'
     # img_path = Path.cwd() / 'data' / 'sequence_09' / 'images' / '00000.jpg'
     # test_create_histogram(img_path)
     # test_select(img_path)

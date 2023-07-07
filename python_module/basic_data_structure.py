@@ -88,6 +88,10 @@ class ImmaturePoint:
         self.idepth_min = 0.0
         self.idepth_max = None
 
+    def trace_on(self):
+        # find matched point with epipolar geometry and optimize the pose with the GN method.
+        ...
+
 @dataclass
 class MaskedRegion:
     mask_idx: int           = field(init=False)
