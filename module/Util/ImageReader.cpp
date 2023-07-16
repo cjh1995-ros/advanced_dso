@@ -5,14 +5,12 @@ namespace adso
 {
 ImageReader::ImageReader(std::string image_folder)
 {
-    getDir(image_folder);
+    setImages(image_folder);
 
     // check do we resize the image
     cv::Mat img = cv::imread(files_[0]);
     img_new_size_ = img.size();
     is_resize_ = false;
-
-    std::cout << "ImageReader: " << files_.size() << " images found." << std::endl;
 }   
 
 
@@ -20,7 +18,7 @@ ImageReader::ImageReader(std::string image_folder,
                          cv::Size image_size)
 {
     img_new_size_ = image_size;
-    getDir(image_folder);
+    setImages(image_folder);
 
     // check do we resize the image
     cv::Mat img = cv::imread(files_[0]);
@@ -32,7 +30,7 @@ ImageReader::ImageReader(std::string image_folder,
 }   
 
 
-cv::Mat ImageReader::readImage(int index)
+cv::Mat ImageReader::at(int index)
 {
     cv::Mat img = cv::imread(files_[index]);
 
@@ -42,12 +40,12 @@ cv::Mat ImageReader::readImage(int index)
         exit(1);
     }
     if (is_resize_)
-        cv::resize(img, img, m_img_new_size);
+        cv::resize(img, img, img_new_size_);
     
     return img;
 }
 
-int ImageReader::getDir(const std::string& dir)
+int ImageReader::setImages(const std::string& dir)
 {
     fs::path path(dir);
 

@@ -22,33 +22,34 @@ include_directories(
 
 link_directories(${Eigen_INCLUDE_DIRS})
 
-# Add module tester
-add_executable(test_image_reader 
-    module_test/TestImageReader.cpp)
-target_link_libraries(test_image_reader 
+set(INCLUDE_LIBRARIES
     ${OpenCV_LIBS} 
     Eigen3::Eigen
     gtest
-    gtest_main
+    gtest_main)
+
+# Add module tester
+add_executable(test_image_reader 
+    module_test/TestImageReader.cpp
+    module/Image/Frame.cpp
+    module/Util/ImageReader.cpp)
+target_link_libraries(test_image_reader 
+    ${INCLUDE_LIBRARIES}
     )
 
 
 # add_executable(test_image_and_exposure 
 #    module_test/TestImageAndExposure.cpp)
-
-
 # target_link_libraries( test_image_and_exposure 
 #     ${OpenCV_LIBS} 
 #     ${Eigen_LIBRARIES})
 
-add_executable(test_solve module_test/TestSolve.cpp)
-target_link_libraries( test_solve
-    ${OpenCV_LIBS} 
-    Eigen3::Eigen)
+# add_executable(test_solve module_test/TestSolve.cpp)
+# target_link_libraries( test_solve
+#     ${INCLUDE_LIBRARIES}    
+#     )
 
-add_executable(test_frame module_test/TestFrame.cpp)
-target_link_libraries( test_frame
-        ${OpenCV_LIBS} 
-        Eigen3::Eigen
-        gtest
-        gtest_main)
+# add_executable(test_frame module_test/TestFrame.cpp)
+# target_link_libraries( test_frame
+#     ${INCLUDE_LIBRARIES}
+#     )

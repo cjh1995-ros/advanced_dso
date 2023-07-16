@@ -15,15 +15,11 @@ class Frame
 {
 private:
     cv::Mat original_;
-    cv::Mat pyramid_;
-    std::vector<cv::Mat> vp_gradient_;
+    std::vector<cv::Mat> img_pyramids_;
 
-    // features in the frame. policy is from DSO
-    // std::vector<std::unique_ptr<Feature> > vp_features_;
-    
-    // vignette and response model. usually set before estimate exposure time.
-    // std::unique_ptr<VigentteModel> p_vignette_;
-    // std::unique_ptr<ResponseModel> p_response_;
+    std::vector<cv::Size> sizes_;
+    std::vector<cv::Mat> gradients_;
+
     double exposure_time_;
 
     int idx_; // index of the frame
@@ -31,24 +27,43 @@ private:
 
 public:
     Frame(cv::Mat orig, int idx, int plvl = 4): 
-        original_(orig), plvl_(plvl), idx_(idx) {};
+        original_(orig), plvl_(plvl), idx_(idx) 
+        {
+            genPyramid();
+            genGradientImage();
+        };
     
     Frame(cv::Mat orig, int idx, double exp_time, int plvl = 4):
         original_(orig), plvl_(plvl), idx_(idx), exposure_time_(exp_time) {};
     
     ~Frame(){};
 
-    inline void setExposureTime(double exp_time) { exposure_time_ = exp_time; };
-    // inline void setVignette(std::unique_ptr<VignetteModel> vignette) 
-    //     { p_vignette_ = std::move(vignette); };
-    // inline void setResponse(std::unique_ptr<ResponseModel> response) 
-    //     { p_response_ = std::move(response); };
-    // inline void genRadianceImage(){};
-    inline void genPyramid()
-        {cv::buildPyramid(original_, pyramid_, plvl_);};
-
+    inline void setExposureTime(double exp_time) {exposure_time_ = exp_time;};
+    inline void genPyramid() {cv::buildPyramid(original_, img_pyramids_, plvl_);};
     void genGradientImage();
+    cv::Size getSize(int lvl) const {return sizes_[lvl];};
 };
 
+class StereoFrame
+{
+private:
+    std::unique_ptr<Frame> left_;
+    std::unique_ptr<Frame> right_;
+
+    std::shared_ptr<StereoFrame> p_ref_;
+
+    // make pixel selector for left frame
+
+public:
+    StereoFrame(cv::Mat left, cv::Mat right, int idx, int plvl = 4):
+        left_(std::make_unique<Frame>(left, idx, plvl)),
+        right_(std::make_unique<Frame>(right, idx, plvl)) {};
+    
+    StereoFrame(std::vector<cv::Mat> images, int idx, int plvl = 4):
+        left_(std::make_unique<Frame>(images[0], idx, plvl)),
+        right_(std::make_unique<Frame>(images[1], idx, plvl)) {};
+    
+    bool isSameSize(int lvl) const {return left_->getSize(lvl) == right_->getSize(lvl);};
+};
 
 } // namespace adso
