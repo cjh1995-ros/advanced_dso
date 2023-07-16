@@ -2,10 +2,10 @@
 
 #include "CommonInclude.hpp"
 
-#include "Image/ExposureTimeEstimator.hpp"
-#include "Image/ResponseModel.hpp"
-#include "Image/VignetteModel.hpp"
-#include "Image/Feature.hpp"
+// #include "Image/ExposureTimeEstimator.hpp"
+// #include "Image/ResponseModel.hpp"
+// #include "Image/VignetteModel.hpp"
+// #include "Image/Feature.hpp"
 
 
 namespace adso
@@ -19,11 +19,11 @@ private:
     std::vector<cv::Mat> vp_gradient_;
 
     // features in the frame. policy is from DSO
-    std::vector<std::unique_ptr<Feature> > vp_features_;
+    // std::vector<std::unique_ptr<Feature> > vp_features_;
     
     // vignette and response model. usually set before estimate exposure time.
-    std::unique_ptr<VigentteModel> p_vignette_;
-    std::unique_ptr<ResponseModel> p_response_;
+    // std::unique_ptr<VigentteModel> p_vignette_;
+    // std::unique_ptr<ResponseModel> p_response_;
     double exposure_time_;
 
     int idx_; // index of the frame
@@ -33,14 +33,10 @@ public:
     Frame(cv::Mat orig, int idx, int plvl = 4): 
         original_(orig), plvl_(plvl), idx_(idx) {};
     
-    Frame(cv::Mat orig, ind idx, double exp_time, int plvl = 4):
+    Frame(cv::Mat orig, int idx, double exp_time, int plvl = 4):
         original_(orig), plvl_(plvl), idx_(idx), exposure_time_(exp_time) {};
     
-    ~Frame()
-    {
-        for(auto& f: vp_features_)
-            delete f;
-    };
+    ~Frame(){};
 
     inline void setExposureTime(double exp_time) { exposure_time_ = exp_time; };
     // inline void setVignette(std::unique_ptr<VignetteModel> vignette) 

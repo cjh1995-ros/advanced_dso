@@ -27,7 +27,7 @@ public:
 
     /// @brief  Get the number of images in the folder
     /// @return 
-    inline int getNumImages(){return static_cast<int>(m_files.size());};
+    inline int getNumImages(){return static_cast<int>(files_.size());};
 
     /// @brief Get the Dir object
     /// @param dir 

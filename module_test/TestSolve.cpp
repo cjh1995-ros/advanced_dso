@@ -100,7 +100,7 @@ void SmallOptimizer::calcJacobian()
         hess_y_y += jac_ * jac_.transpose();
         hess_rho_y.block<1, 8>(i, 0) = jac_rho[i] * jac_.transpose();
         hess_y_rho.block<8, 1>(0, i) = jac_ * jac_rho[i];
-        hess_rho_rho.insert(i, i) = jac_rho[i] * jac_rho[i];
+        hess_rho_rho(i, i) = jac_rho[i] * jac_rho[i];
         
         b_y += -jac_y * residual_[i];
         b_rho[i] = -jac_rho[i] * residual_[i];
