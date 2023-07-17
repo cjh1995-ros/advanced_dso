@@ -13,6 +13,9 @@ add_subdirectory(
 
 find_package(OpenCV REQUIRED PATHS /opt/homebrew/Cellar/opencv/4.8.0)
 find_package(Eigen3 REQUIRED)
+find_package(fmt REQUIRED)
+find_package(glog REQUIRED)
+find_package(Boost REQUIRED)
 
 # Include directories
 include_directories( 
@@ -36,20 +39,3 @@ add_executable(test_image_reader
 target_link_libraries(test_image_reader 
     ${INCLUDE_LIBRARIES}
     )
-
-
-# add_executable(test_image_and_exposure 
-#    module_test/TestImageAndExposure.cpp)
-# target_link_libraries( test_image_and_exposure 
-#     ${OpenCV_LIBS} 
-#     ${Eigen_LIBRARIES})
-
-# add_executable(test_solve module_test/TestSolve.cpp)
-# target_link_libraries( test_solve
-#     ${INCLUDE_LIBRARIES}    
-#     )
-
-# add_executable(test_frame module_test/TestFrame.cpp)
-# target_link_libraries( test_frame
-#     ${INCLUDE_LIBRARIES}
-#     )
