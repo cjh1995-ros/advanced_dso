@@ -31,6 +31,13 @@ set(INCLUDE_LIBRARIES
     gtest
     gtest_main)
 
+
+add_library()
+
+
+
+
+
 # Add module tester
 add_executable(test_image_reader 
     module_test/TestImageReader.cpp
