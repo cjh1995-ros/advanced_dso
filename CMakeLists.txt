@@ -16,6 +16,7 @@ find_package(Eigen3 REQUIRED)
 find_package(glog REQUIRED)
 find_package(Boost REQUIRED)
 find_package(fmt REQUIRED)
+find_package(absl REQUIRED)
 
 # set dependencies
 include_directories( 
@@ -34,27 +35,38 @@ set(INCLUDE_LIBRARIES
 )
 
 
-# set lib for module test
-add_library(image_reader src/image_reader.cpp)
-target_link_libraries(image_reader ${INCLUDE_LIBRARIES})
-
-# main source
-add_executable(adso src/main.cpp)
+add_executable(adso src/main.cpp
+    src/image_reader.cpp
+)
 target_link_libraries(
     adso
     ${INCLUDE_LIBRARIES}
 )
 
+# set lib for module test
+add_library(image_reader src/image_reader.cpp)
+target_link_libraries(image_reader ${INCLUDE_LIBRARIES})
+add_library(point src/point.cpp)
+target_link_libraries(point ${INCLUDE_LIBRARIES})
 
-# Test sources
-# for gtest
+
+# install gtest and google-benchmark
 include(FetchContent)
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        release-1.12.0
 )
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+FetchContent_Declare(
+  googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG        v1.7.0
+
+)
+FetchContent_MakeAvailable(
+    googletest
+    googlebenchmark
+)
 
 enable_testing()
 
@@ -66,8 +78,33 @@ add_executable(
 target_link_libraries(
     test_image_reader
     ${INCLUDE_LIBRARIES}
-    GTest::gtest_main
+    # GTest::gtest_main
+    gtest_main
     image_reader
+)
+
+# set test pixel
+add_executable(
+    test_pixel_operate
+    test/test_pixel_operate.cpp
+)
+target_link_libraries(
+    test_pixel_operate
+    ${INCLUDE_LIBRARIES}
+    # GTest::gtest_main
+    gtest_main
+)
+
+# set benchmark sources
+add_executable(
+    bm_pixel_operate
+    benchmark/bm_pixel_operate.cpp
+)
+target_link_libraries(
+    bm_pixel_operate
+    ${INCLUDE_LIBRARIES}
+    benchmark::benchmark
+    benchmark::benchmark_main
 )
 
 include(GoogleTest)

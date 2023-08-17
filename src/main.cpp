@@ -1,4 +1,5 @@
 #include "CLI11.hpp"
+#include "image_reader.hpp"
 #include <string>
 #include <iostream>
 
@@ -11,7 +12,13 @@ int main(int argc, char **argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    std::cout << "Image folder: " << image_folder << std::endl;
+    adso::ImageReader reader(image_folder);
+
+    for (int i = 0; i < reader.getNumImages(); ++i) 
+    {
+        cv::Mat img = reader.readImage(i);
+        std::cout << reader.logging() << std::endl;
+    }
 
     return 0;
 }
