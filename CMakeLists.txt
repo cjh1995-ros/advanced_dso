@@ -7,44 +7,68 @@ project(MyProject)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_subdirectory(
-    thirdparty/googletest
-    )
+# brew packages are in /opt/homebrew/opt
+list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt")
 
-find_package(OpenCV REQUIRED PATHS /opt/homebrew/Cellar/opencv/4.8.0_1)
+# find dependencies
+find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(fmt REQUIRED)
 find_package(glog REQUIRED)
 find_package(Boost REQUIRED)
+find_package(fmt REQUIRED)
 
-# # Include directories
-# include_directories( 
-#     include/module
-#     ${OpenCV_INCLUDE_DIRS} 
-#     )
+# set dependencies
+include_directories( 
+    include
+    ${OpenCV_INCLUDE_DIRS} 
+)
+link_directories(${Eigen_INCLUDE_DIRS})
 
-# link_directories(${Eigen_INCLUDE_DIRS})
-
-# set(INCLUDE_LIBRARIES
-#     ${OpenCV_LIBS} 
-#     Eigen3::Eigen
-#     gtest
-#     gtest_main)
-
-
-# add_executable(test_pixel 
-#     module_test/TestPixel.cpp)
-# target_link_libraries(test_pixel 
-#     ${INCLUDE_LIBRARIES}
-#     )
+# set include libraries
+set(INCLUDE_LIBRARIES
+    ${OpenCV_LIBS} 
+    Eigen3::Eigen
+    glog::glog
+    fmt::fmt
+    pthread
+)
 
 
+# set lib for module test
+add_library(image_reader src/image_reader.cpp)
+target_link_libraries(image_reader ${INCLUDE_LIBRARIES})
 
-# # Add module tester
-# add_executable(test_image_reader 
-#     module_test/TestImageReader.cpp
-#     module/Image/Frame.cpp
-#     module/Util/ImageReader.cpp)
-# target_link_libraries(test_image_reader 
-#     ${INCLUDE_LIBRARIES}
-#     )
+# main source
+add_executable(adso src/main.cpp)
+target_link_libraries(
+    adso
+    ${INCLUDE_LIBRARIES}
+)
+
+
+# Test sources
+# for gtest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+# set test sources
+add_executable(
+    test_image_reader 
+    test/test_image_reader.cpp
+)
+target_link_libraries(
+    test_image_reader
+    ${INCLUDE_LIBRARIES}
+    GTest::gtest_main
+    image_reader
+)
+
+include(GoogleTest)
+gtest_discover_tests(test_image_reader)
