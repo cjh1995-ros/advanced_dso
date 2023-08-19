@@ -37,11 +37,36 @@ public:
     void SetResponseModel(const ResponseModel& res) { response_model_ = res; }
     const ResponseModel& GetResponseModel() const { return response_model_; }
 
+
+    //////////////// Handling Graph ///////////////////////
+    void AddEdge(int idx1, int idx2) { graph_[idx1].push_back(idx2); }
+    void RemoveEdge(int idx1, int idx2) { graph_[idx1].erase(graph_[idx1].begin() + idx2); }
+    // void RemoveNode(int idx) 
+    // {
+    //     // remove all edges to from this node
+    //     graph_.erase(graph_.begin() + idx); 
+    //     for (auto& edges : graph_)
+    //     {
+    //         edges.erase(edges.begin() + idx);
+    //     }
+    // }
+
+
+    /////////////////// Visualize /////////////////////////////
+    /**
+     * @todo: 
+     *  1. visualize tracking with feature points in last image
+     *  2. visualize corrected photo from vignette, response and exposure
+    */
+
+
 private:
     cv::Size size_;
     std::vector<KeyFrame> frames_;
     VignetteModel vignette_model_;
     ResponseModel response_model_;
+
+    std::vector<std::vector<int>> graph_; // graph of keyframe
 };
 
 
