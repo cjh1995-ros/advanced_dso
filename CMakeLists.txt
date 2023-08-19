@@ -95,6 +95,30 @@ target_link_libraries(
     gtest_main
 )
 
+# set test vignette
+add_executable(
+    test_vignette
+    test/test_vignette_model.cpp
+)
+target_link_libraries(
+    test_vignette
+    ${INCLUDE_LIBRARIES}
+    gtest_main
+)
+
+# set test vignette
+add_executable(
+    test_response
+    test/test_response_model.cpp
+)
+target_link_libraries(
+    test_response
+    ${INCLUDE_LIBRARIES}
+    gtest_main
+    absl::span
+)
+
+############ Benchmark ############
 # set benchmark sources
 add_executable(
     bm_pixel_operate
