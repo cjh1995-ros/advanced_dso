@@ -6,7 +6,7 @@
 namespace adso 
 {
 
-TEST(VignetteOperateTest, TestInitVig)
+TEST(TestVignetteOperate, TestInitVig)
 {
     cv::Mat image = (cv::Mat_<uchar>(4, 4) << 0, 0, 0, 0,
                                               0, 0, 0, 0,
@@ -38,7 +38,7 @@ TEST(VignetteOperateTest, TestInitVig)
     EXPECT_DOUBLE_EQ(vig.GetMaxRadius(), 2.121320343559643);
 }
 
-TEST(VignetteOperateTest, TestGetNormedRadius)
+TEST(TestVignetteOperate, TestGetNormedRadius)
 {
     cv::Mat image = (cv::Mat_<uchar>(4, 4) << 0, 0, 0, 0,
                                               0, 0, 0, 0,
@@ -64,7 +64,7 @@ TEST(VignetteOperateTest, TestGetNormedRadius)
     EXPECT_DOUBLE_EQ(vig.GetNormedRadius(px2), 1.0);
 }
 
-TEST(VignetteOperateTest, TestGetVignetteFactor)
+TEST(TestVignetteOperate, TestGetVignetteFactor)
 {
     cv::Mat image = (cv::Mat_<uchar>(4, 4) << 0, 0, 0, 0,
                                               0, 0, 0, 0,

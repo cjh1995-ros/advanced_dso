@@ -59,7 +59,7 @@ private:
     PixelGradGrid pxgrads_; // stores pixels and grad
     int grid_border_{1}; // grid border
 public:
-    explicit PixelSelector(const SelectCfg& cfg = SelectCfg()) : cfg_(cfg) {}
+    explicit PixelSelector(SelectCfg cfg = SelectCfg()) : cfg_(std::move(cfg)) {}
 
     std::string Repr() const;
     friend std::ostream& operator<<(std::ostream& os, const PixelSelector& ps) 

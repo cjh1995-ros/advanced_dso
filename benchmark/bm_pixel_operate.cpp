@@ -3,7 +3,8 @@
 #include <opencv2/core/core.hpp>
 #include <Eigen/Dense>
 
-using namespace adso;
+namespace adso
+{
 
 constexpr int kSize = 320;
 constexpr int kHalfSize = kSize / 2; // 160
@@ -29,6 +30,32 @@ void BM_ValAtE(benchmark::State& state)
 }
 BENCHMARK(BM_ValAtE);
 
+void BM_GradAtD(benchmark::State& state) 
+{
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(GradAtD<uchar>(kImage, kPx));
+    }
+}
+BENCHMARK(BM_GradAtD);
+
+void BM_GradAtE(benchmark::State& state) 
+{
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(GradAtE<uchar>(kImage, kUv));
+    }
+}
+BENCHMARK(BM_GradAtE);
+
+
+void BM_ValGradAtD(benchmark::State& state)
+{
+    for (auto _ : state)
+    {
+        benchmark::DoNotOptimize(GradAtD<uchar>(kImage, kPx));
+    }
+}
+BENCHMARK(BM_ValGradAtD);
+
 void BM_ValGradAtE(benchmark::State& state) 
 {
     for (auto _ : state) 
@@ -48,6 +75,17 @@ void BM_ValGradAtDSep(benchmark::State& state)
 }
 BENCHMARK(BM_ValGradAtDSep);
 
+
+void BM_GradAtI(benchmark::State& state) 
+{
+    for (auto _ : state) 
+    {
+        benchmark::DoNotOptimize(GradAtI<uchar>(kImage, kPx));
+    }
+}
+BENCHMARK(BM_GradAtI);
+
+
 void BM_SobelAtI(benchmark::State& state) 
 {
     for (auto _ : state) 
@@ -56,3 +94,5 @@ void BM_SobelAtI(benchmark::State& state)
     }
 }
 BENCHMARK(BM_SobelAtI);
+
+}

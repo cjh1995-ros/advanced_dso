@@ -1,6 +1,6 @@
 #include "image.hpp"
 #include <opencv2/imgproc.hpp>
-#include "util/logging.h"
+#include "util/logging.hpp"
 
 
 namespace adso
@@ -24,10 +24,10 @@ cv::Mat CropImageFactor(const cv::Mat& image, int factor)
     return cropped;
 }
 
-cv::Mat MakeRandMat8U(int rows, int cols = 0)
+cv::Mat MakeRandMat8U(int rows, int cols)
 {
     if (cols == 0) cols = rows;
-    cv::Mat mat{rows, cols, CV_8UC1};
+    cv::Mat mat = cv::Mat::zeros(rows, cols, CV_8UC1);
     cv::randu(mat, cv::Scalar{0}, cv::Scalar{255});
     return mat;
 }
@@ -36,7 +36,7 @@ bool IsImagePyramid(const ImagePyramid& images)
 {
     if (images.empty()) return false;
 
-    for (size_t i=1; i<images.size()l ++i)
+    for (size_t i=1; i<images.size(); ++i)
     {
         const auto& below = images[i-1];
         const auto& above = images[i];
@@ -113,7 +113,7 @@ void CopyImagePyramid(const ImagePyramid& source, ImagePyramid& target)
 
 void MakeGradPyramid(const ImagePyramid& images,
                      ImagePyramid& grads,
-                     bool to_uint8 = false)
+                     bool to_uint8)
 {
     grads.resize(images.size());
     for (size_t i=0; i<images.size(); ++i)
