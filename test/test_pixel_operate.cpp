@@ -102,8 +102,3 @@ TEST(PixelTest, TestScalePix) {
 
 
 } // namespace adso
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS(); // Google Test를 실행하고 결과를 저장합니다.
-}

@@ -56,5 +56,3 @@ void BM_SobelAtI(benchmark::State& state)
     }
 }
 BENCHMARK(BM_SobelAtI);
-
-BENCHMARK_MAIN();

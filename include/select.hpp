@@ -45,8 +45,8 @@ struct SelectCfg
     double max_ratio{1.0}; // increase min_grad when ratio > max_ratio
     bool reselect{false}; // reselect if first round is two low
 
-    std::string Repr() const;
-    void Check() const;
+    // std::string Repr() const;
+    // void Check() const;
 };
 
 
@@ -59,7 +59,7 @@ private:
     PixelGradGrid pxgrads_; // stores pixels and grad
     int grid_border_{1}; // grid border
 public:
-    explicit PixelSelector(const SelectCfg& cfg = SelectCfg()) : cfg_(cfg) { cfg.Check();}
+    explicit PixelSelector(const SelectCfg& cfg = SelectCfg()) : cfg_(cfg) {}
 
     std::string Repr() const;
     friend std::ostream& operator<<(std::ostream& os, const PixelSelector& ps) 
@@ -72,7 +72,7 @@ public:
     const PixelGrid& pixels() const noexcept { return pixels_; }
     cv::Size cvsize() const noexcept { return pixels_.cvsize(); }
 
-    /// @brief Select pixels
+    /// @brief Select pixels. This is main function of this class
     /// @note Selection result is stored in grid() 
     int Select(const ImagePyramid& grays, int gsize = 0);
 
@@ -86,11 +86,10 @@ public:
 private:
     int SelectPixels(int min_grad);
     int SelectPixels(const cv::Mat& gray,
-                     const cv::Mat& mask,
-                     int min_grad
+                     int upscale,
+                     int min_grad,
                      int gsize = 0);
     int AdaptMinGrad(double ratio1, double ratio2) const noexcept;
-
 };
 
 } // namespace adso

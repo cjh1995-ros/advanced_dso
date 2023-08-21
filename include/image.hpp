@@ -21,7 +21,7 @@ bool MatSetRoi(cv::Mat& mat,
     // mat의 roi 영역을 val로 채움
     for (int r = 0; r < roi.height; ++r) 
     {
-        for (c = 0; c < roi.width; ++c)
+        for (int c = 0; c < roi.width; ++c)
         {
             mat.at<T>(roi.y + r, roi.x + c) = val;
         }

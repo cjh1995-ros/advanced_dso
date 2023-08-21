@@ -67,6 +67,8 @@ private:
     ResponseModel response_model_;
 
     std::vector<std::vector<int>> graph_; // graph of keyframe
+
+    int n_optimize_frames_ = 50; // optimize the recent 50 keyframes
 };
 
 

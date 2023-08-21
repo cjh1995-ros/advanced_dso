@@ -17,10 +17,12 @@ find_package(glog REQUIRED)
 find_package(Boost REQUIRED)
 find_package(fmt REQUIRED)
 find_package(absl REQUIRED)
+find_package(TBB REQUIRED)
 
 # set dependencies
 include_directories( 
     include
+    include/util
     ${OpenCV_INCLUDE_DIRS} 
 )
 link_directories(${Eigen_INCLUDE_DIRS})
@@ -34,21 +36,17 @@ set(INCLUDE_LIBRARIES
     pthread
 )
 
-
-add_executable(adso src/main.cpp
-    src/image_reader.cpp
-)
-target_link_libraries(
-    adso
-    ${INCLUDE_LIBRARIES}
-)
-
 # set lib for module test
 add_library(image_reader src/image_reader.cpp)
 target_link_libraries(image_reader ${INCLUDE_LIBRARIES})
 add_library(point src/point.cpp)
 target_link_libraries(point ${INCLUDE_LIBRARIES})
-
+add_library(selector src/select.cpp)
+target_link_libraries(selector 
+    TBB::tbb
+    absl::span
+    ${INCLUDE_LIBRARIES}
+)
 
 # install gtest and google-benchmark
 include(FetchContent)
@@ -70,66 +68,100 @@ FetchContent_MakeAvailable(
 
 enable_testing()
 
-# set test sources
-add_executable(
-    test_image_reader 
+set(TEST_SOURCE_FILES
     test/test_image_reader.cpp
-)
-target_link_libraries(
-    test_image_reader
+    test/test_pixel_operate.cpp
+    test/test_response_model.cpp
+    test/test_selector.cpp
+    test/test_vignette_model.cpp)
+
+set(BENCHMARK_SOURCE_FILES
+    benchmark/bm_pixel_operate.cpp)
+
+add_executable(test_and_bm src/test_and_bm.cpp
+    ${TEST_SOURCE_FILES}
+    ${BENCHMARK_SOURCE_FILES})
+target_link_libraries( test_and_bm
     ${INCLUDE_LIBRARIES}
-    # GTest::gtest_main
+    selector
+    point
     gtest_main
     image_reader
+    benchmark::benchmark
 )
+
+# set test sources
+# add_executable(
+#     test_image_reader 
+#     test/test_image_reader.cpp
+# )
+# target_link_libraries(
+#     test_image_reader
+#     ${INCLUDE_LIBRARIES}
+#     # GTest::gtest_main
+#     gtest_main
+#     image_reader
+# )
 
 # set test pixel
-add_executable(
-    test_pixel_operate
-    test/test_pixel_operate.cpp
-)
-target_link_libraries(
-    test_pixel_operate
-    ${INCLUDE_LIBRARIES}
-    # GTest::gtest_main
-    gtest_main
-)
+# add_executable(
+#     test_pixel_operate
+#     test/test_pixel_operate.cpp
+# )
+# target_link_libraries(
+#     test_pixel_operate
+#     ${INCLUDE_LIBRARIES}
+#     # GTest::gtest_main
+#     gtest_main
+# )
 
 # set test vignette
-add_executable(
-    test_vignette
-    test/test_vignette_model.cpp
-)
-target_link_libraries(
-    test_vignette
-    ${INCLUDE_LIBRARIES}
-    gtest_main
-)
+# add_executable(
+#     test_vignette
+#     test/test_vignette_model.cpp
+# )
+# target_link_libraries(
+#     test_vignette
+#     ${INCLUDE_LIBRARIES}
+#     gtest_main
+# )
 
 # set test vignette
-add_executable(
-    test_response
-    test/test_response_model.cpp
-)
-target_link_libraries(
-    test_response
-    ${INCLUDE_LIBRARIES}
-    gtest_main
-    absl::span
-)
+# add_executable(
+#     test_response
+#     test/test_response_model.cpp
+# )
+# target_link_libraries(
+#     test_response
+#     ${INCLUDE_LIBRARIES}
+#     gtest_main
+#     absl::span
+# )
+
+# set test selector
+# add_executable(
+#     test_selector
+#     test/test_selector.cpp
+# )
+# target_link_libraries(
+#     test_selector
+#     ${INCLUDE_LIBRARIES}
+#     gtest_main
+#     selector
+# )
 
 ############ Benchmark ############
 # set benchmark sources
-add_executable(
-    bm_pixel_operate
-    benchmark/bm_pixel_operate.cpp
-)
-target_link_libraries(
-    bm_pixel_operate
-    ${INCLUDE_LIBRARIES}
-    benchmark::benchmark
-    benchmark::benchmark_main
-)
+# add_executable(
+#     bm_pixel_operate
+#     benchmark/bm_pixel_operate.cpp
+# )
+# target_link_libraries(
+#     bm_pixel_operate
+#     ${INCLUDE_LIBRARIES}
+#     benchmark::benchmark
+#     benchmark::benchmark_main
+# )
 
 include(GoogleTest)
-gtest_discover_tests(test_image_reader)
+# gtest_discover_tests(test_image_reader)
