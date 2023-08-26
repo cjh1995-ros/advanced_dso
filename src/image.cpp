@@ -96,9 +96,9 @@ void MakeGradImage(const cv::Mat& image, cv::Mat& grad)
 {
     cv::Mat gx;
     cv::Mat gy;
-    const double scale = 1.0 / 4.0 / 255.0;
-    cv::Sobel(image, gx, CV_32FC1, 1, 0, 3, scale);
-    cv::Sobel(image, gy, CV_32FC1, 0, 1, 3, scale);
+    constexpr double SCALE = 1.0 / 4.0 / 255.0;
+    cv::Sobel(image, gx, CV_32FC1, 1, 0, 3, SCALE);
+    cv::Sobel(image, gy, CV_32FC1, 0, 1, 3, SCALE);
     cv::magnitude(gx, gy, grad);
 }
 

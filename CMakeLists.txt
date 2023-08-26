@@ -36,52 +36,63 @@ set(INCLUDE_LIBRARIES
     pthread
     TBB::tbb
     absl::span
-    gtest
+    # gtest
 )
 
 # install gtest and google-benchmark
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        release-1.12.0
-)
-FetchContent_Declare(
-  googlebenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG        v1.7.0
+# include(FetchContent)
+# FetchContent_Declare(
+#   googletest
+#     GIT_REPOSITORY https://github.com/google/googletest.git
+#     GIT_TAG        release-1.12.0
+# )
+# FetchContent_Declare(
+#   googlebenchmark
+#     GIT_REPOSITORY https://github.com/google/benchmark.git
+#     GIT_TAG        v1.7.0
 
-)
-FetchContent_MakeAvailable(
-    googletest
-    googlebenchmark
-)
+# )
+# FetchContent_MakeAvailable(
+#     googletest
+#     googlebenchmark
+# )
 
-enable_testing()
+# include_directories(${benchmark_SOURCE_DIR}/include)
+
+# enable_testing()
 
 file(GLOB SOURCES "src/*.cpp")
 
-set(TEST_SOURCE_FILES
-    test/test_image_reader.cpp
-    test/test_pixel_operate.cpp
-    test/test_response_model.cpp
-    test/test_selector.cpp
-    test/test_vignette_model.cpp)
+# set(TEST_SOURCE_FILES
+#     test/test_image_reader.cpp
+#     test/test_pixel_operate.cpp
+#     test/test_response_model.cpp
+#     test/test_selector.cpp
+#     test/test_vignette_model.cpp)
 
-set(BENCHMARK_SOURCE_FILES
-    benchmark/bm_pixel_operate.cpp
-    benchmark/bm_select.cpp)
+# set(BENCHMARK_SOURCE_FILES
+#     benchmark/bm_pixel_operate.cpp
+#     benchmark/bm_select.cpp)
 
-add_executable(test_and_bm src/test_and_bm.cpp
-    ${TEST_SOURCE_FILES}
-    ${BENCHMARK_SOURCE_FILES}
-    ${SOURCES}
-)
-target_link_libraries( test_and_bm
-    ${INCLUDE_LIBRARIES}
-    gtest_main
-    benchmark::benchmark
-)
+# add_executable(test_and_bm src/test_and_bm.cpp
+#     ${TEST_SOURCE_FILES}
+#     ${BENCHMARK_SOURCE_FILES}
+#     ${SOURCES}
+# )
+# target_link_libraries( test_and_bm
+#     ${INCLUDE_LIBRARIES}
+#     gtest_main
+#     benchmark::benchmark
+# )
 
 include(GoogleTest)
 # gtest_discover_tests(test_and_bm)
+
+# Test players
+add_executable(play_selector play/play_selector.cpp ${SOURCES})
+target_link_libraries(play_selector 
+    ${INCLUDE_LIBRARIES}
+    ${OpenCV_LIBS}
+    absl::flags
+    absl::flags_parse
+)
