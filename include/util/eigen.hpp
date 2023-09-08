@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace sv {
+namespace adso {
 
 using MatrixXd = Eigen::MatrixXd;
 using VectorXd = Eigen::VectorXd;

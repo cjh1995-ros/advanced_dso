@@ -22,17 +22,17 @@ TEST(TestVignetteOperate, TestInitVig)
     VignetteModel vig(v1, v2, v3, img_size, center);
 
     // Check vignette factor is inited well
-    EXPECT_EQ(vig.GetV1(), v1);
-    EXPECT_EQ(vig.GetV2(), v2);
-    EXPECT_EQ(vig.GetV3(), v3);
+    EXPECT_EQ(vig.v1(), v1);
+    EXPECT_EQ(vig.v2(), v2);
+    EXPECT_EQ(vig.v3(), v3);
 
     // Check image size is inited well
-    EXPECT_EQ(vig.GetSize().width, img_size.width);
-    EXPECT_EQ(vig.GetSize().height, img_size.height);
+    EXPECT_EQ(vig.cvsize().width, img_size.width);
+    EXPECT_EQ(vig.cvsize().height, img_size.height);
 
     // Check center value is inited well
-    EXPECT_EQ(vig.GetCenter().x, center.x);
-    EXPECT_EQ(vig.GetCenter().y, center.y);
+    EXPECT_EQ(vig.center().x, center.x);
+    EXPECT_EQ(vig.center().y, center.y);
 
     // Check max radius is inited well
     EXPECT_DOUBLE_EQ(vig.GetMaxRadius(), 2.121320343559643);

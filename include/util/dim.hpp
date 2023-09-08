@@ -9,7 +9,7 @@ struct Dim {
   static constexpr int kPatch = 5;   // we use patch size of 5
   static constexpr int kAffine = 2;  // affine a and b
   static constexpr int kPose = 6;    // rot and trans
-  static constexpr int kMono = kPose + kAffine;
+  static constexpr int kMono = kPose + kAffine; // 8
   static constexpr int kStereo = kMono + kAffine;
   static constexpr int kFrame = kStereo;
 };

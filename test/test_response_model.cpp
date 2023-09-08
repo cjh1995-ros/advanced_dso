@@ -18,7 +18,7 @@ TEST(TestResponseModel, TestInitResponseModelGrossBergmann)
 
     EXPECT_EQ(rm.GetMode(), ResponseModelMode::GrossBergmann);
     EXPECT_EQ(rm.GetInverseResponseTable(), irt);
-    EXPECT_EQ(rm.GetGrossbergParams(), gbp);
+    EXPECT_EQ(rm.GetResponseParams(), gbp);
 }
 
 TEST(TestResponseModel, TestInitResponseModelLinear)
@@ -35,8 +35,8 @@ TEST(TestResponseModel, TestInitResponseModelLinear)
 
     EXPECT_EQ(rm.GetMode(), ResponseModelMode::Linear);
     EXPECT_EQ(rm.GetInverseResponseTable(), irt);
-    EXPECT_NE(rm.GetGrossbergParams(), gbp);
-    EXPECT_EQ(rm.GetGrossbergParams(), gbp_zero);
+    EXPECT_NE(rm.GetResponseParams(), gbp);
+    EXPECT_EQ(rm.GetResponseParams(), gbp_zero);
 }
 
 TEST(TestResponseModel, TestRemoveResponse)

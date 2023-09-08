@@ -17,23 +17,23 @@ struct SettingPoint
     static constexpr double kBadIdepth = -1.0;
     static constexpr double kNand = std::numeric_limits<double>::quiet_NaN();
     inline static const cv::Point2d kBadPixD = {kNand, kNand};
-
     static constexpr int kBadHid = -1;
 };
 
 
 /// @brief Pixel and Idepth value
-class DepthPoint
+struct DepthPoint
 {
 private:
     SettingPoint cfg_; // setting for point
     cv::Point2d px_; // pixel coordinate
     double idepth_; // inverse depth
     mutable double info_; // jacobian value
+
 public:
     DepthPoint(SettingPoint cfg = SettingPoint()): cfg_(cfg), px_(cfg_.kBadPixD), idepth_(cfg_.kBadIdepth), info_(cfg_.kBadInfo) {}
 
-    /// @brief return basic info of point
+    /// @brief return basic data of point
     Eigen::Vector2d uv() const noexcept { return Eigen::Vector2d(px_.x, px_.y); }
     const cv::Point2d& px() const noexcept { return px_; }
     double idepth() const noexcept { return idepth_; }
@@ -59,7 +59,7 @@ public:
     bool SkipAlign() const noexcept {return !InfoOk() || PixelBad() || DepthBad();}
 
     /// @brief Modifiers
-    void SetPixel(const cv::Point2d& px) noexcept {px_ = px;}
+    void SetPix(const cv::Point2d& px) noexcept {px_ = px;}
     void UpdateIdepth(double d_idepth) noexcept
     {
         idepth_ = std::max(0.0, idepth_ + d_idepth);
@@ -80,8 +80,9 @@ public:
 
 
 /// @brief Idepth point at a keyframe, stores jacobian.
-class FramePoint final : public DepthPoint
+struct FramePoint final : public DepthPoint
 {
+
     using Matrix23d = Eigen::Matrix<double, 2, 3>;
     using Matrix26d = Eigen::Matrix<double, 2, 6>;
 
@@ -92,8 +93,11 @@ class FramePoint final : public DepthPoint
     Eigen::Vector3d pt() const noexcept {return nh() / idepth();}
     Eigen::Vector3d nh() const noexcept {return {nc.x(), nc.y(), 1.0};}
 
-    void SetNC(const Eigen::Vector3d& nh) noexcept {nc = nh.head<2>();}
     bool HidBad() const noexcept {return hid_ < 0;}
+
+    void SetNc(const Eigen::Vector3d& nh) noexcept {nc = nh.head<2>();}
+    int hid() const noexcept {return hid_;}
+    void SetHid(int hid) noexcept {hid_ = hid;}
 };
 
 
@@ -102,14 +106,11 @@ struct SettingPatch
     static constexpr int kSize = Dim::kPatch;
     static constexpr int kCenter = 0;
     static constexpr int kBorder = 2;
-    // inline static const Point2dArray kOffsetPx = {
-    //     cv::Point{0, 0}, {0, -1}, {-1, 0}, {1, 0}, {0, 1}
-    // };
 };
 
 
 /// @brief Patch with 4 extra pixels around center
-class Patch
+struct Patch
 {
     static constexpr int kSize = Dim::kPatch;
     static constexpr int kCenter = 0;
@@ -125,11 +126,11 @@ class Patch
         cv::Point{0, 0}, {0, -1}, {-1, 0}, {1, 0}, {0, 1}
     };
 
-private:
+    // Data
     ArrayKd vals_{};         // raw image intensity values
     Point2dArray grads_{};   // raw image gradients
 
-public:
+
     /// @brief Whether this patch is good 
     bool Bad() const noexcept {return vals_[kCenter] < 0;}
     void SetBad() noexcept {vals_[kCenter] = -1;}
@@ -153,6 +154,7 @@ public:
 
     /// @brief Extract intensity and gradient from gray image at patch pxs
     void Extract(const cv::Mat& image, const Point2dArray& pxs) noexcept;
+    void ExtractAround(const cv::Mat& image, const cv::Point2d& px) noexcept;
     // void ExtractFast(const cv::Mat& image, const Point2dArray& pxs) noexcept;
     void ExtractIntensity(const cv::Mat& image, const Point2dArray& pxs) noexcept;
 

@@ -16,6 +16,10 @@ enum ResponseModelMode
 
 class ResponseModel
 {
+
+using ResponseModelParams = std::array<double, 4>;
+using ResponseModelInvParams = std::array<double, 256>;
+
 public:
     ResponseModel() = default;
     explicit ResponseModel(ResponseModelMode mode): mode_(mode) 
@@ -57,14 +61,14 @@ public:
     }
 
     ResponseModelMode GetMode() const noexcept { return mode_; }
-    std::array<double, 256> GetInverseResponseTable() const noexcept { return inverse_response_table_; }
-    std::array<double, 4> GetGrossbergParams() const noexcept { return grossberg_params_; }
+    ResponseModelInvParams GetInverseResponseTable() const noexcept { return inverse_response_table_; }
+    ResponseModelParams GetResponseParams() const noexcept { return grossberg_params_; }
 
 private:
     ResponseModelMode mode_;
 
-    std::array<double, 256> inverse_response_table_;
-    std::array<double, 4> grossberg_params_;
+    ResponseModelInvParams inverse_response_table_;
+    ResponseModelParams grossberg_params_;
 };
 
 }

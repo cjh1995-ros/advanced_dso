@@ -4,6 +4,8 @@
 #include <absl/types/span.h>
 #include <sophus/se3.hpp>
 
+#include <Eigen/Dense>
+
 #include "image.hpp"
 #include "util/dim.hpp"
 #include "point.hpp"
@@ -11,6 +13,7 @@
 
 namespace adso
 {
+
 
 struct AffineModel
 {
@@ -28,12 +31,11 @@ struct ErrorState
     /// @brief  Error state vector
     Vector10d x_{Vector10d::Zero()};
 
-
     ErrorState() = default;
     explicit ErrorState(const Vector10dCRef& delta): x_{delta} {}
-    const Vector10d& vec() const noexcept { return x_; }
-    Eigen::Vector2d ab_l() const noexcept { return x_.segment<2>(Dim::kPose); }
-    Eigen::Vector2d ab_r() const noexcept { return x_.segment<2>(Dim::kMono); }
+    const Vector10d& vec() const noexcept { return x_; } // 0~9
+    Eigen::Vector2d ab_l() const noexcept { return x_.segment<2>(Dim::kPose); } // 6, 7
+    Eigen::Vector2d ab_r() const noexcept { return x_.segment<2>(Dim::kMono); } // 8, 9
     Sophus::SE3d dT() const noexcept
     {
         return {Sophus::SO3d::exp(x_.head<3>()), x_.segment<3>(3)};
@@ -48,31 +50,37 @@ struct ErrorState
 
 struct FrameState
 {
+    FrameState() = default;
+    explicit FrameState(Sophus::SE3d tf_w_cl = {},
+                        AffineModel affine_l = {},
+                        AffineModel affine_r = {}):
+        T_w_cl{tf_w_cl}, affine_l{affine_l}, affine_r{affine_r} { }
+
     /// @brief Main information of frame.
     Sophus::SE3d T_w_cl; // pose of left camera
     AffineModel affine_l; // affine model of left camera
     AffineModel affine_r; // affine model of right camera
 
     /// @brief Represent frame state as string
-    std::string Repr() const;
-    friend std::ostream& operator<<(std::ostream& os, const FrameState& fs)
-    {
-        return os << fs.Repr();
-    }
+    // std::string Repr() const;
+    // friend std::ostream& operator<<(std::ostream& os, const FrameState& fs)
+    // {
+    //     return os << fs.Repr();
+    // }
 
     /// @brief  Update frame state with error state
     FrameState& operator+=(const ErrorState& dx)
     {
-        T_w_cl *= er.dT();
-        affine_l.ab += er.ab_l();
-        affine_r.ab += er.ab_r();
+        T_w_cl *= dx.dT();
+        affine_l.ab += dx.ab_l();
+        affine_r.ab += dx.ab_r();
         return *this;
     }
     FrameState& operator-=(const ErrorState& dx)
     {
-        T_w_cl *= er.dT().inverse();
-        affine_l.ab -= er.ab_l();
-        affine_r.ab -= er.ab_r();
+        T_w_cl *= dx.dT().inverse();
+        affine_l.ab -= dx.ab_l();
+        affine_r.ab -= dx.ab_r();
         return *this;
     }
     friend FrameState operator+(FrameState st, const ErrorState& dx) noexcept
@@ -98,28 +106,32 @@ struct Frame
     FrameState state_;
 
     // constructors and deconstructor
-    Frame() = default;
     virtual ~Frame() noexcept = default;
 
-    Frame(const ImagePyramid& gray_l,
-          const ImagePyramid& gray_r,
-          const Sophus::SE3d& tf_w_cl,
-          const AffineModel& affine_l = {},
-          const AffineModel& affine_r = {});
+    explicit Frame(const ImagePyramid& gray_l,
+                   const ImagePyramid& gray_r,
+                   const Sophus::SE3d& tf_w_cl,
+                   const AffineModel& affine_l = {},
+                   const AffineModel& affine_r = {});
 
 
     /// @brief Represent frame as string
-    virtual std::string Repr() const;
-    friend std::ostream& operator<<(std::ostream& os, const Frame& frame)
-    {
-        return os << frame.Repr();
-    }
+    // virtual std::string Repr() const;
+    // friend std::ostream& operator<<(std::ostream& os, const Frame& frame)
+    // {
+    //     return os << frame.Repr();
+    // }
 
     /// @brief Information of frame
     int levels() const noexcept { return static_cast<int>(grays_l_.size()); }
     bool empty() const noexcept { return grays_l_.empty(); }
     bool is_stereo() const noexcept { return !grays_r_.empty(); }
-    cv::Size image_size() const noexecpt;
+    cv::Size image_size() const noexcept 
+    {
+        if (grays_l_.empty()) return {};
+        const auto& mat = grays_l_.front();
+        return {mat.cols, mat.rows};
+    }
 
     /// @brief Accessors
     const ImagePyramid& grays_l() const noexcept { return grays_l_; }
@@ -131,13 +143,15 @@ struct Frame
     const Sophus::SE3d& Twc() const noexcept { return state_.T_w_cl; }
 
     /// @brief Modifiers
-    void SetGrays(const ImagePyramid& grays_l, const ImagePyramid& grays_r = {});
+    void SetGrays(const ImagePyramid& grays_l, const ImagePyramid& grays_r)
+    {
+        // TODO : check if it is image pyramid and stereo pair
+        grays_l_ = grays_l;
+        grays_r_ = grays_r;
+    };
     void SetTwc(const Sophus::SE3d& tf_w_cl) noexcept { state_.T_w_cl = tf_w_cl; }
-    void Setstate(const FrameState& state) noexcept { state_ = state; }
-    virtual void UpdateState(const Vector10dCRef& dx) noexcept 
-    { 
-        state_ += ErrorState{dx}; 
-    }
+    void SetState(const FrameState& state) noexcept { state_ = state; }
+    virtual void UpdateState(const Vector10dCRef& dx) noexcept { state_ += ErrorState{dx}; }
 };
 
 
@@ -156,13 +170,13 @@ struct KeyframeStatus
 
     std::string FrameStatus() const;
     std::string PointStatus() const;
-    std::string TrackStatus() const;
+    // std::string TrackStatus() const;
 
-    std::string Repr() const;
-    friend std::ostream& operator<<(std::ostream& os, const KeyframeStatus& st)
-    {
-        return os << st.Repr();
-    }
+    // std::string Repr() const;
+    // friend std::ostream& operator<<(std::ostream& os, const KeyframeStatus& st)
+    // {
+    //     return os << st.Repr();
+    // }
 
     void UpdateInfo(const FramePointGrid& points0);
 };
@@ -173,13 +187,15 @@ struct Keyframe final : public Frame
     KeyframeStatus status_{};
     FramePointGrid points_{};
     std::vector<PatchGrid> patches_{};  // precomputed patches
-    bool fixed_{false};                 // whether first estimate is fixed
-    ErrorState x_{};                    // error state x in dso paper
+    /// @brief whether first estimate is fixed -> marginalization 우선순위를 말함.
+    bool fixed_{false};                 
+    // error state x in dso paper
+    ErrorState x_{};       
 
     /// @brief Fix first estimate
     bool is_fixed() const noexcept { return fixed_; }
     void SetFixed() noexcept { fixed_ = true; }
-    /// @brief This is eta0 in dso paper
+    /// @brief This is zeta0 in dso paper
     FrameState GetFirstEstimate() const noexcept;
 
     /// @brief Update state during optimization, need to call
@@ -194,7 +210,7 @@ struct Keyframe final : public Frame
     const std::vector<PatchGrid>& patches() const noexcept { return patches_; }
 
     Keyframe() = default;
-    std::string Repr() const override;
+    // std::string Repr() const override;
 
     /// @brief Initialize from frame
     void SetFrame(const Frame& frame) noexcept;
@@ -206,15 +222,15 @@ struct Keyframe final : public Frame
     int InitPoints(const PixelGrid& pixels, const Camera& camera);
 
     /// @group Initialize point depth from various sources
-    int InitFromConst(double depth, double info = DepthPoint::kOkInfo);
+    int InitFromConst(double depth, double info = SettingPoint::kOkInfo);
     /// @brief Initialize point depth from depths (from RGBD or ground truth)
-    int InitFromDepth(const cv::Mat& depth, double info = DepthPoint::kOkInfo);
+    // int InitFromDepth(const cv::Mat& depth, double info = SettingPoint::kOkInfo);
     /// @brief Initialize point depth from disparities (from StereoMatcher)
     int InitFromDisp(const cv::Mat& disp,
                     const Camera& camera,
-                    double info = DepthPoint::kOkInfo);
+                    double info = SettingPoint::kOkInfo);
     /// @brief Initialize point depth from inverse depths (from FrameAligner)
-    int InitFromAlign(const cv::Mat& idepth, double info);
+    int InitFromAlign(const cv::Mat& idepth, double info); // <- 현재는 이것만 쓴다는 가정!
 
     /// @brief Initialize patches
     /// @return number of patches from all levels

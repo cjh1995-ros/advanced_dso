@@ -35,6 +35,17 @@ void Patch::Extract(const cv::Mat& mat, const Point2dArray& pxs) noexcept
     }
 }
 
+void Patch::ExtractAround(const cv::Mat& image,
+                          const cv::Point2d& px) noexcept 
+{
+    for (int k = 0; k < kSize; ++k) 
+    {
+        const auto px_k = px + kOffsetPx[k];
+        vals_[k] = ValAtD<uchar>(image, px_k);
+        grads_[k] = GradAtD<uchar>(image, px_k);
+    }
+}
+
 
 void Patch::ExtractIntensity(const cv::Mat& mat,
                              const Point2dArray& pxs) noexcept

@@ -77,12 +77,11 @@ public:
         v3_ = vignette_model[2];
     }
 
-    double GetV1() const noexcept { return v1_; }
-    double GetV2() const noexcept { return v2_; }
-    double GetV3() const noexcept { return v3_; }
-
-    cv::Size GetSize() const noexcept { return img_size_; }
-    cv::Point2d GetCenter() const noexcept { return center_; }
+    double v1() const noexcept { return v1_; }
+    double v2() const noexcept { return v2_; }
+    double v3() const noexcept { return v3_; }
+    cv::Size cvsize() const noexcept { return img_size_; }
+    cv::Point2d center() const noexcept { return center_; }
 
     double GetMaxRadius() const noexcept { return max_radius_; }
 

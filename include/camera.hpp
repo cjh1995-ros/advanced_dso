@@ -72,7 +72,7 @@ struct Camera
 
     /// @brief Project point to image
     template <int N>
-    virtual MatrixMNd<2, N> Forward(const MatrixMNd<3, N>& pts) const noexcept
+    MatrixMNd<2, N> Forward(const MatrixMNd<3, N>& pts) const noexcept
     {
         auto uv = ((pts.template topRows<2>()).array().rowwise() / 
                     pts.template bottomRows<1>().array())
@@ -84,7 +84,7 @@ struct Camera
 
     /// @brief Backproject image to point
     template <int N>
-    virtual MatrixMNd<3, N> Backward(const MatrixMNd<2, N>& uv) const noexcept
+    MatrixMNd<3, N> Backward(const MatrixMNd<2, N>& uv) const noexcept
     {
         auto nc = (uv.array().colwise() - fxycxy_.tail<2>()).eval();
         nc.colwise() /= fxycxy_.head<2>();
@@ -96,19 +96,19 @@ struct Camera
 
     /// @brief Convert inverse depth to disparity
     template <int M, int N>
-    virtual ArrayMNd<M, N> Idepth2Disp(const ArrayMNd<M, N>& idepth) const noexcept
+    ArrayMNd<M, N> Idepth2Disp(const ArrayMNd<M, N>& idepth) const noexcept
     {
         return fx() * baseline() * idepth;
     }
 
     /// @brief Convert disparity to inverse depth
-    virtual double Depth2Disp(double depth) const noexcept
+    double Depth2Disp(double depth) const noexcept
     {
         return fx() * baseline() / depth;
     }
 
     /// @brief Convert disparity to inverse depth
-    virtual double Disp2Idepth(double disp) const noexcept
+    double Disp2Idepth(double disp) const noexcept
     {
         return disp / (fx() * baseline());
     }
